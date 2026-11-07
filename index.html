@@ -393,11 +393,11 @@
     const MOBILE_QUERY = window.matchMedia('(max-width:640px)');
 
     document.querySelectorAll('.carousel').forEach(function(carousel){
-      // Simpan daftar foto ASLI sekali saja (sebelum ada klona ditambahkan)
-      const originalSlidesHTML = Array.from(carousel.querySelectorAll('.carousel-slide'))
-        .map(function(s){ return s.outerHTML; });
-
       const track = carousel.querySelector('.carousel-track');
+      // Simpan elemen foto ASLI sekali saja (sebelum ada klona ditambahkan).
+      // Elemen ini dipakai terus dan tidak dibuat ulang, supaya <img> tidak
+      // dimuat ulang (dan sempat kosong) saat layar di-resize atau HP diputar.
+      const realSlides = Array.from(track.querySelectorAll('.carousel-slide'));
       const dotsWrap = carousel.querySelector('.carousel-dots');
 
       let timer = null;
@@ -414,15 +414,23 @@
         clearInterval(timer);
         if (cleanupSwipe) cleanupSwipe();
 
-        // Reset track ke foto asli (buang klona dari init sebelumnya)
-        track.innerHTML = originalSlidesHTML.join('');
+        // Buang hanya klona dari init sebelumnya; foto asli tetap di tempatnya
+        track.querySelectorAll('.carousel-slide[data-clone]').forEach(function(c){ c.remove(); });
         dotsWrap.innerHTML = '';
         track.style.transition = 'none';
         track.style.transform = 'translateX(0%)';
 
-        const realSlides = Array.from(track.querySelectorAll('.carousel-slide'));
         const N = realSlides.length;
         const visible = getVisible();
+
+        // Foto yang akan tampil berikutnya dimuat segera (tidak lazy),
+        // supaya tidak kosong saat carousel bergeser otomatis.
+        function warm(from){
+          for (let k = from; k < from + visible + 1 && k < N; k++){
+            realSlides[k].querySelectorAll('img').forEach(function(img){ img.loading = 'eager'; });
+          }
+        }
+        warm(0);
 
         // Kalau foto lebih sedikit/sama dengan yang terlihat sekaligus, tampilkan statis saja
         if (N <= visible) { return; }
@@ -432,6 +440,7 @@
         for (let c = 0; c < visible; c++){
           const clone = realSlides[c].cloneNode(true);
           clone.setAttribute('aria-hidden', 'true');
+          clone.setAttribute('data-clone', 'true');
           track.appendChild(clone);
         }
 
@@ -460,6 +469,7 @@
 
         function goTo(i, instant){
           index = i;
+          warm(index + 1);
           track.style.transition = instant ? 'none' : '';
           track.style.transform = 'translateX(-' + (index * stepPercent) + '%)';
           setActiveDot(index);
