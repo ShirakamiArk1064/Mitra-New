@@ -1989,8 +1989,8 @@ body{letter-spacing:.005em}
   .navbar{padding:8px 12px}
   .logo-img{height:44px}
   .hero{padding:36px 18px 62px;min-height:0}
-  .hero-inner{gap:24px}
-  .hero-copy{max-width:none}
+  .hero-inner{gap:24px;flex-direction:column;align-items:stretch}
+  .hero-copy{flex:none;width:100%;max-width:none}
   .hero-eyebrow{font-size:9px;letter-spacing:.14em;margin-bottom:14px}
   .hero-box{
     max-width:none;
@@ -2003,6 +2003,8 @@ body{letter-spacing:.005em}
   .hero-description{font-size:14px;line-height:1.75;margin-bottom:20px}
   .hero-cta{padding:12px 15px;font-size:12px}
   .hero-img{
+    flex:none;
+    width:100%;
     height:235px;
     max-width:none;
     border-width:5px;
