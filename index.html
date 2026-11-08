@@ -401,6 +401,7 @@
       const dotsWrap = carousel.querySelector('.carousel-dots');
 
       let timer = null;
+      let loopTimer = null;
       let cleanupSwipe = null;
 
       function getVisible(){
@@ -412,6 +413,7 @@
 
       function init(){
         clearInterval(timer);
+        clearTimeout(loopTimer);
         if (cleanupSwipe) cleanupSwipe();
 
         // Buang hanya klona dari init sebelumnya; foto asli tetap di tempatnya
@@ -446,7 +448,9 @@
 
         // Ukur langsung dari lebar slide yang benar-benar dirender (bukan asumsi 100/visible),
         // supaya mode "peek" (foto berikutnya sedikit terlihat di tepi) tetap presisi.
-        const stepPercent = (realSlides[0].getBoundingClientRect().width / carousel.getBoundingClientRect().width) * 100;
+        let stepPercent = (realSlides[0].getBoundingClientRect().width / carousel.getBoundingClientRect().width) * 100;
+        // Kalau carousel sedang tersembunyi saat diukur, hasilnya NaN/0 dan geser jadi rusak
+        if (!isFinite(stepPercent) || stepPercent <= 0) stepPercent = 100 / visible;
 
         const realMaxIndex = N - visible;
         const loopIndex = N;
@@ -468,6 +472,7 @@
         }
 
         function goTo(i, instant){
+          clearTimeout(loopTimer);
           index = i;
           warm(index + 1);
           track.style.transition = instant ? 'none' : '';
@@ -476,13 +481,26 @@
           if (instant){
             void track.offsetHeight;
             track.style.transition = '';
+          } else if (index === loopIndex){
+            // Cadangan: event "transitionend" tidak selalu terpicu (tab di latar belakang,
+            // animasi dimatikan di pengaturan perangkat, dsb). Tanpa ini carousel
+            // lanjut bergeser melewati klona dan layar jadi kosong.
+            loopTimer = setTimeout(function(){
+              if (index === loopIndex) goTo(0, true);
+            }, 700);
           }
         }
 
-        function next(){ goTo(index + 1); }
+        function next(){
+          // Jaring pengaman: jangan pernah bergeser melewati klona terakhir
+          if (index >= loopIndex) goTo(0, true);
+          goTo(index + 1);
+        }
         function prev(){ goTo(Math.max(0, index - 1)); }
 
-        function onTransitionEnd(){
+        function onTransitionEnd(e){
+          // Abaikan transisi milik elemen anak (misal efek hover pada foto)
+          if (e && e.target !== track) return;
           if (index === loopIndex){
             goTo(0, true);
           }
