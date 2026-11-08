@@ -2021,9 +2021,10 @@ body{letter-spacing:.005em}
   .partnership-title .sparkle-img{height:20px}
   .partnership-intro{font-size:13px;line-height:1.8;margin-bottom:28px}
   .partner-card{padding:13px;margin-bottom:20px}
-  .partner-card-top{padding:5px;gap:17px}
-  .partner-card-img{flex:1 1 100%;max-width:none}
+  .partner-card-top{padding:5px;gap:17px;flex-direction:column;flex-wrap:nowrap;align-items:stretch}
+  .partner-card-img{flex:none;width:100%;max-width:none}
   .partner-card-img img{height:205px}
+  .partner-card-text{flex:none;width:100%}
   .partner-card-text h3{font-size:21px}
   .partner-card-text p{font-size:13px;line-height:1.75}
   .partner-card-gallery{padding:12px 0 2px}
